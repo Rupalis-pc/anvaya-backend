@@ -1,6 +1,6 @@
 const { initializeDatabase } = require("./db/db.connect");
 const express = require("express");
-const cors = require('cors')
+const cors = require("cors");
 const Lead = require("./model/lead.model");
 const Comment = require("./model/comment.model");
 const SalesAgent = require("./model/salesAgent.model");
@@ -15,8 +15,8 @@ const PORT = process.env.PORT;
 initializeDatabase();
 
 const app = express();
-app.use(express.json())
-app.use(cors())
+app.use(express.json());
+app.use(cors());
 
 app.listen(PORT, () => {
   console.log(`App is running on server ${PORT}`);
@@ -268,6 +268,27 @@ app.post("/agents", async (req, res) => {
   } catch (error) {
     console.log("error", error);
     res.status(500).json({ message: "Failed to post sales agent data." });
+  }
+});
+
+// delete agent data
+app.delete("/agents/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleteAgentData = await SalesAgent.findByIdAndDelete(req.params.id);
+
+    if (!deleteAgentData) {
+      return res.status(404).json({
+        error: `Agent with ID '${id}' not found.`,
+      });
+    }
+
+    res.status(200).json({
+      message: "Agent deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete lead data." });
   }
 });
 
