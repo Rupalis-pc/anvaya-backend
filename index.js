@@ -184,41 +184,34 @@ app.delete("/leads/:id", async (req, res) => {
 // add a comment to lead id
 app.post("/leads/:id/comments", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { commentText, author } = req.body;
+    const leadId = req.params.id;
 
-    //find lead, Check if Lead exists
-    const lead = await Lead.findById(id);
-    if (!lead) {
-      return res.status(404).json({
-        error: `Lead with ID '${id}' not found.`,
-      });
-    }
-
-    //Create and save new comment
-    const newComment = new Comment({ ...req.body, lead: id });
-    await newComment.save(); // Save to DB
-    res.status(201).json({
-      message: "New comment added to the Lead",
-      comment: newComment,
+    const newComment = await Comment.create({
+      lead: leadId,
+      author,
+      commentText,
     });
+
+    res.status(201).json(newComment);
   } catch (error) {
-    console.error("Error adding comment:", error);
-    res.status(500).json({ message: "Failed to add comment." });
+    res.status(400).json({ error: error.message });
   }
 });
 
-// get all comments to lead id
+// Get all comments for a specific lead
 app.get("/leads/:id/comments", async (req, res) => {
   try {
-    const comments = await Comment.find();
+    const leadId = req.params.id;
+    const comments = await Comment.find({ lead: leadId });
 
     if (comments.length > 0) {
       res.json(comments);
     } else {
-      res.status(404).json({ error: "Comment Data not found" });
+      res.status(404).json({ error: "No comments found for this lead." });
     }
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch comments data." });
+    res.status(500).json({ message: "Failed to fetch comments." });
   }
 });
 
