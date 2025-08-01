@@ -321,3 +321,46 @@ app.post("/tags", async (req, res) => {
     res.status(500).json({ message: "Failed to post tags data." });
   }
 });
+
+// fetch closed leaads from last week
+app.get("/report/last-week", async (req, res) => {
+  try {
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    const leads = await Lead.find({
+      status: "Closed",
+      updatedAt: { $gte: sevenDaysAgo, $lte: today },
+    });
+
+    if (leads.length > 0) {
+      res.status(200).json(leads);
+    } else {
+      res.status(404).json({ message: "No leads closed in the last 7 days." });
+    }
+  } catch (error) {
+    console.error("Error fetching last week's closed leads:", error);
+    res.status(500).json({ message: "Server error while fetching report." });
+  }
+});
+
+// All except 'Closed'
+app.get("/report/pipeline", async (req, res) => {
+  try {
+    const pipelineStatuses = ["New", "Contacted", "Qualified", "Proposal Sent"];
+
+    const totalPipelineLeads = await Lead.countDocuments({
+      status: { $in: pipelineStatuses },
+    });
+
+    res.status(200).json({
+      totalPipelineLeads,
+    });
+  } catch (error) {
+    console.error("Error fetching pipeline report:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while generating pipeline report." });
+  }
+});
