@@ -130,33 +130,26 @@ app.post("/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate Lead ID
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({
-        error: "Lead ID must be a valid ObjectId.",
-      });
+      return res.status(400).json({ error: "Invalid lead ID" });
     }
 
-    // Update lead and return the updated document
-    const updateLeadData = await Lead.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const updatedLead = await Lead.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedLead) {
-      return res.status(404).json({
-        error: `Lead with ID '${id}' not found.`,
-      });
+      return res.status(404).json({ error: `Lead with ID '${id}' not found` });
     }
 
     res.status(200).json({
-      message: "Lead data updated successfully",
-      lead: updateLeadData,
+      message: "Lead updated successfully",
+      lead: updatedLead,
     });
   } catch (error) {
     console.error("Error updating lead:", error);
-    res.status(500).json({ error: "Failed to post leads data.", error });
+    res.status(500).json({ error: error.message });
   }
 });
 
